@@ -1,11 +1,16 @@
 plugins {
     id 'java'
+    id 'application'
 }
 
 group 'ch.parisi.montyhall'
 version '1.0-SNAPSHOT'
 
 sourceCompatibility = 1.8
+
+application {
+    mainClassName = 'ch.parisi.montyhall.Main'
+}
 
 repositories {
     mavenCentral()

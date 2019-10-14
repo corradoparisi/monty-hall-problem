@@ -1,7 +1,9 @@
+package ch.parisi.montyhall;
+
 import java.util.Random;
 import java.util.Scanner;
 
-class MontyHall {
+class MontyHallCli {
 
     //TODO implement random switching Strategy
     private boolean alwaysSwitching = true;
@@ -81,7 +83,7 @@ class MontyHall {
             if (alwaysSwitching) {
                 System.out.println("Yes I do");
                 firstChoiceIndex = winningDoorIndex;
-                System.out.println("Your initial choice was changed to " + winningDoorIndex);
+                System.out.println("Your initial choice was changed to " + firstChoiceIndex);
                 System.out.println("annnd youuuu ....");
                 System.out.println("WON!");
                 return true;
