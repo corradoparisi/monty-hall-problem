@@ -1,15 +1,16 @@
 package ch.parisi.montyhall;
 
+import ch.parisi.montyhall.strategy.*;
+
 import java.util.Random;
 import java.util.Scanner;
 
 class MontyHallCli {
 
-    //TODO implement random switching Strategy
-    private boolean alwaysSwitching = true;
     private int simulations = 1000;
     private int numberOfDoors = 3;
     private Scanner scanner = new Scanner(System.in);
+    private SwitchStrategy switchStrategy;
 
 
     void userConfiguration() {
@@ -19,8 +20,30 @@ class MontyHallCli {
         System.out.println("How many simulation runs would you like?");
         simulations = scanner.nextInt();
 
-        System.out.println("Do you want to switch always?");
-        alwaysSwitching = scanner.nextBoolean();
+        System.out.println("Which mode would you like?");
+        for (GameStrategy value : GameStrategy.values()) {
+            System.out.println(value.toString().toLowerCase());
+        }
+
+        String mode = scanner.next();
+        GameStrategy gameStrategy = GameStrategy.valueOf(mode.toUpperCase());
+
+        switch(gameStrategy) {
+            case ALWAYS:
+                switchStrategy = new AlwaysSwitchStrategy();
+                break;
+            case NEVER:
+                switchStrategy = new NeverSwitchStrategy();
+                break;
+            case RANDOM:
+                switchStrategy = new RandomSwitchStrategy();
+                break;
+            case USER:
+                switchStrategy = new UserSwitchStrategy();
+                throw new UnsupportedOperationException("This operation is not implemented yet.");
+
+            default: throw new IllegalArgumentException("Game strategy " + mode + " does not exist.");
+        }
     }
 
     void startSimulations() {
@@ -80,7 +103,7 @@ class MontyHallCli {
             System.out.println("Would you like to switch?");
 
             //switch
-            if (alwaysSwitching) {
+            if (switchStrategy.isSwitching()) {
                 System.out.println("Yes I do");
                 firstChoiceIndex = winningDoorIndex;
                 System.out.println("Your initial choice was changed to " + firstChoiceIndex);
@@ -110,7 +133,7 @@ class MontyHallCli {
             }
 
             System.out.println("Would you like to switch?");
-            if (alwaysSwitching) {
+            if (switchStrategy.isSwitching()) {
                 System.out.println("Yes I do");
                 System.out.println("Your initial choice was changed to " + (firstChoiceIndex + 1));
                 System.out.println("annnd youuuu ....");
