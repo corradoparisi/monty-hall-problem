@@ -4,7 +4,8 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
- * java does not have Try,Optional
+ * The {@link ExOptional} class provides helper methods around the default {@link Optional}
+ * to simplify the usage with exceptions.
  */
 public class ExOptional {
     public static <T> Optional<T> of(ExSupplier<T> tSupplier) {
@@ -15,7 +16,7 @@ public class ExOptional {
         }
     }
 
-    public static <T> T orElse(ExSupplier<T> tSupplier, Supplier<T> orElse) {
+    public static <T> T orElseGet(ExSupplier<T> tSupplier, Supplier<T> orElse) {
         return of(tSupplier).orElseGet(orElse);
     }
 
