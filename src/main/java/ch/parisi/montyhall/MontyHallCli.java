@@ -1,5 +1,7 @@
 package ch.parisi.montyhall;
 
+import ch.parisi.montyhall.strategy.*;
+
 import java.util.Random;
 import java.util.Scanner;
 
@@ -13,8 +15,23 @@ class MontyHallCli {
         int numberOfDoors = ExOptional.untilSuccess(scanner::nextInt);
         System.out.println("How many simulation runs would you like?");
         int simulations = ExOptional.untilSuccess(scanner::nextInt);
-        System.out.println("Do you want to switch always?");
-        boolean alwaysSwitching = ExOptional.untilSuccess(scanner::nextBoolean);
+        System.out.println("Which mode would you like?");
+        var alwaysSwitching = ExOptional.untilSuccess(() -> {
+            String mode = scanner.next();
+            GameStrategy gameStrategy = GameStrategy.valueOf(mode.toUpperCase());
+            switch (gameStrategy) {
+                case ALWAYS:
+                    return new AlwaysSwitchStrategy();
+                case NEVER:
+                    return new NeverSwitchStrategy();
+                case RANDOM:
+                    return new RandomSwitchStrategy();
+                case USER:
+                    return new UserSwitchStrategy();
+                default:
+                    throw new IllegalArgumentException("Game strategy " + mode + " does not exist.");
+            }
+        });
         startSimulations(new Options(alwaysSwitching, simulations, numberOfDoors));
     }
 
@@ -75,7 +92,7 @@ class MontyHallCli {
             System.out.println("Would you like to switch?");
 
             //switch
-            if (options.alwaysSwitching) {
+            if (options.alwaysSwitching.isSwitching()) {
                 System.out.println("Yes I do");
                 firstChoiceIndex = winningDoorIndex;
                 System.out.println("Your initial choice was changed to " + firstChoiceIndex);
@@ -105,7 +122,7 @@ class MontyHallCli {
             }
 
             System.out.println("Would you like to switch?");
-            if (options.alwaysSwitching) {
+            if (options.alwaysSwitching.isSwitching()) {
                 System.out.println("Yes I do");
                 System.out.println("Your initial choice was changed to " + (firstChoiceIndex + 1));
                 System.out.println("annnd youuuu ....");
@@ -121,12 +138,21 @@ class MontyHallCli {
         }
     }
 
+    void tralalala() {
+
+        for (GameStrategy value : GameStrategy.values()) {
+            System.out.println(value.toString().toLowerCase());
+        }
+
+
+    }
+
     private static class Options {
-        private final boolean alwaysSwitching;
+        private final SwitchStrategy alwaysSwitching;
         private final int simulations;
         private final int numberOfDoors;
 
-        private Options(boolean alwaysSwitching, int simulations, int numberOfDoors) {
+        private Options(SwitchStrategy alwaysSwitching, int simulations, int numberOfDoors) {
             this.alwaysSwitching = alwaysSwitching;
             this.simulations = simulations;
             this.numberOfDoors = numberOfDoors;
