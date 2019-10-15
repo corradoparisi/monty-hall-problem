@@ -9,14 +9,16 @@ class MontyHallCli {
     private MontyHallCli() {
     }
 
-    static void askAndStartSimulation() {
+    static void montyHallCli() {
         Scanner scanner = new Scanner(System.in);
+
         System.out.println("How many doors would you like?");
         int numberOfDoors = ExOptional.untilSuccess(scanner::nextInt);
         System.out.println("How many simulation runs would you like?");
         int simulations = ExOptional.untilSuccess(scanner::nextInt);
         System.out.println("Which mode would you like?");
-        var alwaysSwitching = ExOptional.untilSuccess(() -> {
+
+        SwitchStrategy alwaysSwitching = ExOptional.untilSuccess(() -> {
             String mode = scanner.next();
             GameStrategy gameStrategy = GameStrategy.valueOf(mode.toUpperCase());
             switch (gameStrategy) {
@@ -32,6 +34,7 @@ class MontyHallCli {
                     throw new IllegalArgumentException("Game strategy " + mode + " does not exist.");
             }
         });
+
         startSimulations(new Options(alwaysSwitching, simulations, numberOfDoors));
     }
 
@@ -71,14 +74,11 @@ class MontyHallCli {
         System.out.println("Welcome to Monty Hall");
         System.out.println("Pick a door you like");
 
-        //generate first choice
         int firstChoiceIndex = random.nextInt(options.numberOfDoors);
-
 
         System.out.println("I've picked door with index " + firstChoiceIndex);
 
         if (firstChoiceIndex != winningDoorIndex) {
-            //printAllExceptForWinningAndPick
             System.out.println("I show you all other false doors.");
 
             doors[winningDoorIndex] = null;
@@ -136,15 +136,6 @@ class MontyHallCli {
                 return true;
             }
         }
-    }
-
-    void tralalala() {
-
-        for (GameStrategy value : GameStrategy.values()) {
-            System.out.println(value.toString().toLowerCase());
-        }
-
-
     }
 
     private static class Options {
