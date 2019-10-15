@@ -6,75 +6,67 @@ import java.util.Random;
 import java.util.Scanner;
 
 class MontyHallCli {
-
-    private int simulations = 1000;
-    private int numberOfDoors = 3;
-    private Scanner scanner = new Scanner(System.in);
-    private SwitchStrategy switchStrategy;
-
-
-    void userConfiguration() {
-        System.out.println("How many doors would you like?");
-        numberOfDoors = scanner.nextInt();
-
-        System.out.println("How many simulation runs would you like?");
-        simulations = scanner.nextInt();
-
-        System.out.println("Which mode would you like?");
-        for (GameStrategy value : GameStrategy.values()) {
-            System.out.println(value.toString().toLowerCase());
-        }
-
-        String mode = scanner.next();
-        GameStrategy gameStrategy = GameStrategy.valueOf(mode.toUpperCase());
-
-        switch(gameStrategy) {
-            case ALWAYS:
-                switchStrategy = new AlwaysSwitchStrategy();
-                break;
-            case NEVER:
-                switchStrategy = new NeverSwitchStrategy();
-                break;
-            case RANDOM:
-                switchStrategy = new RandomSwitchStrategy();
-                break;
-            case USER:
-                switchStrategy = new UserSwitchStrategy();
-                throw new UnsupportedOperationException("This operation is not implemented yet.");
-
-            default: throw new IllegalArgumentException("Game strategy " + mode + " does not exist.");
-        }
+    private MontyHallCli() {
     }
 
-    void startSimulations() {
+    static void montyHallCli() {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("How many doors would you like?");
+        int numberOfDoors = ExOptional.untilSuccess(scanner::nextInt);
+        System.out.println("How many simulation runs would you like?");
+        int simulations = ExOptional.untilSuccess(scanner::nextInt);
+        System.out.println("Which mode would you like?");
+
+        SwitchStrategy alwaysSwitching = ExOptional.untilSuccess(() -> {
+            String mode = scanner.next();
+            GameStrategy gameStrategy = GameStrategy.valueOf(mode.toUpperCase());
+            switch (gameStrategy) {
+                case ALWAYS:
+                    return new AlwaysSwitchStrategy();
+                case NEVER:
+                    return new NeverSwitchStrategy();
+                case RANDOM:
+                    return new RandomSwitchStrategy();
+                case USER:
+                    return new UserSwitchStrategy();
+                default:
+                    throw new IllegalArgumentException("Game strategy " + mode + " does not exist.");
+            }
+        });
+
+        startSimulations(new Options(alwaysSwitching, simulations, numberOfDoors));
+    }
+
+    static void startSimulations(Options options) {
         int numberOfWins = 0;
         int counter = 0;
 
-        while (counter < simulations) {
-            boolean hasWon = montyHall();
+        while (counter < options.simulations) {
+            boolean hasWon = montyHall(options);
             if (hasWon) {
                 numberOfWins++;
             }
             counter++;
         }
 
-        System.out.println("On " + simulations + " attempts we won: " + numberOfWins + " times.");
+        System.out.println("On " + options.simulations + " attempts we won: " + numberOfWins + " times.");
     }
 
-    private boolean montyHall() {
-        if(numberOfDoors == 1)  {
+    private static boolean montyHall(Options options) {
+        if (options.numberOfDoors == 1) {
             System.out.println("You won!");
             return true;
         }
 
-        Boolean[] doors = new Boolean[numberOfDoors];
+        Boolean[] doors = new Boolean[options.numberOfDoors];
 
-        for (int i = 0; i < numberOfDoors; i++) {
+        for (int i = 0; i < options.numberOfDoors; i++) {
             doors[i] = false;
         }
 
         Random random = new Random();
-        int winningDoorIndex = random.nextInt(numberOfDoors);
+        int winningDoorIndex = random.nextInt(options.numberOfDoors);
         System.out.println("The winning door index is = " + winningDoorIndex);
 
         doors[winningDoorIndex] = true;
@@ -82,19 +74,16 @@ class MontyHallCli {
         System.out.println("Welcome to Monty Hall");
         System.out.println("Pick a door you like");
 
-        //generate first choice
-        int firstChoiceIndex = random.nextInt(numberOfDoors);
-
+        int firstChoiceIndex = random.nextInt(options.numberOfDoors);
 
         System.out.println("I've picked door with index " + firstChoiceIndex);
 
         if (firstChoiceIndex != winningDoorIndex) {
-            //printAllExceptForWinningAndPick
             System.out.println("I show you all other false doors.");
 
             doors[winningDoorIndex] = null;
             doors[firstChoiceIndex] = null;
-            for (int i = 0; i < numberOfDoors; i++) {
+            for (int i = 0; i < options.numberOfDoors; i++) {
                 if (doors[i] != null) {
                     System.out.println("Door with index " + i + " is " + false);
                 }
@@ -103,7 +92,7 @@ class MontyHallCli {
             System.out.println("Would you like to switch?");
 
             //switch
-            if (switchStrategy.isSwitching()) {
+            if (options.alwaysSwitching.isSwitching()) {
                 System.out.println("Yes I do");
                 firstChoiceIndex = winningDoorIndex;
                 System.out.println("Your initial choice was changed to " + firstChoiceIndex);
@@ -119,21 +108,21 @@ class MontyHallCli {
 
         } else {
             doors[firstChoiceIndex] = null;
-            if (firstChoiceIndex + 1 > (numberOfDoors - 1)) {
+            if (firstChoiceIndex + 1 > (options.numberOfDoors - 1)) {
                 doors[0] = null;
             } else {
                 doors[firstChoiceIndex + 1] = null;
             }
 
 
-            for (int i = 0; i < numberOfDoors; i++) {
+            for (int i = 0; i < options.numberOfDoors; i++) {
                 if (doors[i] != null) {
                     System.out.println("Door with index " + i + "is " + false);
                 }
             }
 
             System.out.println("Would you like to switch?");
-            if (switchStrategy.isSwitching()) {
+            if (options.alwaysSwitching.isSwitching()) {
                 System.out.println("Yes I do");
                 System.out.println("Your initial choice was changed to " + (firstChoiceIndex + 1));
                 System.out.println("annnd youuuu ....");
@@ -146,6 +135,18 @@ class MontyHallCli {
                 System.out.println("WON!");
                 return true;
             }
+        }
+    }
+
+    private static class Options {
+        private final SwitchStrategy alwaysSwitching;
+        private final int simulations;
+        private final int numberOfDoors;
+
+        private Options(SwitchStrategy alwaysSwitching, int simulations, int numberOfDoors) {
+            this.alwaysSwitching = alwaysSwitching;
+            this.simulations = simulations;
+            this.numberOfDoors = numberOfDoors;
         }
     }
 }
